@@ -3,10 +3,9 @@ from PIL import Image
 import os
 from GUI.games.numguess_window import NumberGuessWindow
 from GUI.games.rps_window import RockPaperScissorsWindow
+from GUI.games.tanks_window import TanksWindow
 
-#==============================================================================
-# NEW: Pop-up window for the Leaderboard
-#==============================================================================
+#TODO: Connect the tanks game to the database and implement the result handling in the GameLauncher class.
 class LeaderboardWindow(customtkinter.CTkToplevel):
     def __init__(self, parent, db):
         super().__init__(parent)
@@ -39,9 +38,7 @@ class LeaderboardWindow(customtkinter.CTkToplevel):
                 customtkinter.CTkLabel(entry_frame, text=username, font=customtkinter.CTkFont(size=18)).grid(row=0, column=1, sticky="w")
                 customtkinter.CTkLabel(entry_frame, text=f"{score} pts", font=customtkinter.CTkFont(size=18, weight="bold"), text_color="#5DADE2").grid(row=0, column=2, sticky="e")
 
-#==============================================================================
-# NEW: Pop-up window for Match History
-#==============================================================================
+
 class HistoryWindow(customtkinter.CTkToplevel):
     def __init__(self, parent, db, user_id):
         super().__init__(parent)
@@ -76,9 +73,7 @@ class HistoryWindow(customtkinter.CTkToplevel):
                 customtkinter.CTkLabel(entry_frame, text=f"Score: {score} points", font=customtkinter.CTkFont(size=14)).pack()
                 customtkinter.CTkLabel(entry_frame, text=played_at, font=customtkinter.CTkFont(size=12), text_color="gray60").pack(pady=(0,10))
 
-#==============================================================================
-# NEW: Pop-up window for Favorites
-#==============================================================================
+
 class FavoritesWindow(customtkinter.CTkToplevel):
     def __init__(self, parent, db, user_id):
         super().__init__(parent)
@@ -144,14 +139,10 @@ class FavoritesWindow(customtkinter.CTkToplevel):
             self.db.set_quickstart(self.user_id, int(game_id_str))
             self.refresh_favorites_list()
 
-#==============================================================================
-# UPDATED GameLauncher Class
-#==============================================================================
-class GameLauncher(customtkinter.CTkToplevel): # This is correctly a CTkToplevel
+
+class GameLauncher(customtkinter.CTkToplevel): 
     def __init__(self, parent, on_logout, username, user_id, db):
-        # **THE FIX IS HERE**: The super().__init__() for a CTkToplevel 
-        # does not take the parent argument directly.
-        super().__init__() # REMOVED 'parent' from this call
+        super().__init__()
         
         self.on_logout = on_logout
         self.username = username
@@ -184,7 +175,8 @@ class GameLauncher(customtkinter.CTkToplevel): # This is correctly a CTkToplevel
             "trophy": ("./GUI/assets/icons/trophy.png", (28, 28)),
             "history": ("./GUI/assets/icons/history.png", (28, 28)),
             "favorite": ("./GUI/assets/icons/favorites.png", (28, 28)),
-            "logout": ("./GUI/assets/icons/logout.png", (24, 24))
+            "logout": ("./GUI/assets/icons/logout.png", (24, 24)),
+            "tanks_large": ("./GUI/assets/games/tanks.png", (128, 128))
         }
         for name, (path, size) in icon_paths.items():
             if os.path.exists(path):
@@ -214,12 +206,13 @@ class GameLauncher(customtkinter.CTkToplevel): # This is correctly a CTkToplevel
     def create_main_content_area(self):
         main_frame = customtkinter.CTkFrame(self, fg_color="transparent")
         main_frame.grid(row=0, column=1, sticky="nsew", padx=50, pady=30)
-        main_frame.grid_columnconfigure((0, 1), weight=1, uniform="games")
+        main_frame.grid_columnconfigure((0, 1, 2), weight=1, uniform="games")
         main_frame.grid_rowconfigure(1, weight=1)
-        customtkinter.CTkLabel(main_frame, text="MY GAMES", font=customtkinter.CTkFont(size=28, weight="bold"), anchor="w").grid(row=0, column=0, columnspan=2, pady=(0, 30), sticky="ew")
+        customtkinter.CTkLabel(main_frame, text="MY GAMES", font=customtkinter.CTkFont(size=28, weight="bold"), anchor="w").grid(row=0, column=0, columnspan=3, pady=(0, 30), sticky="ew")
         self.create_game_card(main_frame, self.icons.get("numguess_large"), "Number Guess", self.open_numguess).grid(row=1, column=0, padx=(0, 25), sticky="nsew")
         self.create_game_card(main_frame, self.icons.get("rps_large"), "Rock Paper Scissors", self.open_rps).grid(row=1, column=1, padx=(25, 0), sticky="nsew")
-
+        self.create_game_card(main_frame, self.icons.get("tanks_large"), "Tanks", self.open_tanks).grid(row=1, column=2, padx=(25, 0), sticky="nsew")
+        
     def create_game_card(self, parent, icon, title, command):
         card = customtkinter.CTkFrame(parent, fg_color="#2B2D30", corner_radius=20, border_width=1, border_color="#3E454D")
         card.grid_rowconfigure(0, weight=2); card.grid_rowconfigure(1, weight=1); card.grid_rowconfigure(2, weight=0); card.grid_columnconfigure(0, weight=1)
@@ -241,14 +234,37 @@ class GameLauncher(customtkinter.CTkToplevel): # This is correctly a CTkToplevel
         self.withdraw()
         RockPaperScissorsWindow(parent=self, username=self.username, on_match_finished=self.handle_rps_result)
 
+    def open_tanks(self):
+        self.withdraw()
+        TanksWindow(
+            username=self.username,
+            on_match_finished=self.handle_tanks_result
+        ).run()
+
     def handle_rps_result(self, result):
-        # The CLI version calculated score for RPS, so we should save it.
-        # Let's assume the score is calculated and passed in the result dict.
         score = result.get("score", 0) 
         self.db.save_match(user_id=self.user_id, game_id=2, result=result["result"], score=score, details=result["details"])
         self.deiconify(); self.lift()
 
-    # --- NEW Methods for Sidebar Buttons ---
+    def handle_tanks_result(self, result):
+
+        print("Tanks match finished:")
+        print(result)
+
+        # Future database code:
+        #
+        # self.db.save_match(
+        #     user_id=self.user_id,
+        #     game_id=3,
+        #     result=result["result"],
+        #     score=result["score"],
+        #     details=result["details"]
+        # )
+
+        self.deiconify()
+        self.lift()
+        self.focus_force()
+
     def open_leaderboard(self):
         LeaderboardWindow(parent=self, db=self.db)
         
@@ -261,10 +277,8 @@ class GameLauncher(customtkinter.CTkToplevel): # This is correctly a CTkToplevel
     def logout(self):
         self.on_logout()
 
-# Example of how you would run this launcher from your main app controller
+
 if __name__ == "__main__":
-    # This is a mock setup for demonstration.
-    # You would replace this with your actual app flow.
     class MockDB:
         def get_leaderboard(self): return [("Player1", 150), ("BotSlayer", 95), ("Tester", 50)]
         def get_match_history(self, user_id): return [("Number Guess", "win", 35, "2023-10-27 10:30"), ("Rock Paper Scissors", "lose", 10, "2023-10-27 10:35")]
@@ -276,7 +290,6 @@ if __name__ == "__main__":
     def show_login_screen():
         print("\n--- LOGOUT SUCCESSFUL ---")
         print("Now showing login screen...")
-        # In a real app, you would destroy the mock_app and create your login window
         mock_app.quit()
 
     mock_app = GameLauncher(on_logout=show_login_screen, username="Tester", user_id=1, db=MockDB())

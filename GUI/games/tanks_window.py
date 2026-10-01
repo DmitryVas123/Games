@@ -1,11 +1,3 @@
-"""Tanks vs AI - pygame window (rendering + input only, no game rules here).
-
-Controls
-    A / D        drive left / right (limited fuel and a limited range per map)
-    <- / ->      barrel angle  (hold Shift for steps of 5)
-    UP / DOWN    shot power    (hold Shift for steps of 5)
-    SPACE        fire
-"""
 from __future__ import annotations
 
 import math
@@ -15,9 +7,9 @@ from enum import Enum, auto
 import pygame
 
 try:                                   # project layout: Games/games/tanks.py
-    from games.tanks import TanksGame, GameConfig
+    from GUI.games.tanks import TanksGame, GameConfig
 except ImportError:                    # fallback when run next to tanks.py
-    from tanks import TanksGame, GameConfig
+    from .tanks import TanksGame, GameConfig
 
 # ------------------------------------------------------------------ palette --
 WHITE = (255, 255, 255)

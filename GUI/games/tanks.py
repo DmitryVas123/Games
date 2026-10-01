@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Tuple
 
 try:                                   # project layout: Games/games/tank_maps.py
-    from games.tank_maps import GameMap, build_maps
+    from GUI.games.tank_maps import GameMap, build_maps
 except ImportError:                    # fallback when run next to the files
     from tank_maps import GameMap, build_maps
 
@@ -39,7 +39,7 @@ class GameConfig:
     max_power: int = 200
     # tanks
     tank_hp: int = 100
-    move_budget: int = 160          # px a tank may drive per turn
+    move_budget: int = 300          # px a tank may drive per turn
     move_speed: float = 2.0         # px per step while driving
     max_climb: float = 3.0          # max terrain height change per step (steepness limit)
     knockback_per_damage: float = 1.2   # px a tank is pushed per HP lost
@@ -106,7 +106,7 @@ class Explosion:
     """Damage area + animation timer. Damage falls off linearly with distance."""
 
     def __init__(self, x: float, y: float, max_radius: float = 60,
-                 max_damage: int = 50, duration: int = 30):
+                 max_damage: int = 60, duration: int = 30):
         self.x, self.y = x, y
         self.max_radius, self.max_damage = max_radius, max_damage
         self.duration = duration
