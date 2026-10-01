@@ -1,6 +1,6 @@
 import customtkinter
 from PIL import Image
-import os
+
 
 import sys
 import os
