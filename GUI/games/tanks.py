@@ -1,13 +1,3 @@
-"""Tanks vs AI - pure game logic (NO pygame imports in this file).
-
-The window (GUI/games/tanks_window.py) only draws what is stored here and
-forwards player input. Everything that decides the outcome of a match lives
-in this module, so it can be unit-tested, reused by another GUI, or driven
-over a network later.
-
-Coordinate system: pygame style - x grows to the right, y grows DOWNWARD.
-Angles: 0 deg = right, 90 = straight up, 180 = left.
-"""
 from __future__ import annotations
 
 import math
@@ -15,9 +5,9 @@ import random
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Tuple
 
-try:                                   # project layout: Games/games/tank_maps.py
+try:                                   
     from GUI.games.tank_maps import GameMap, build_maps
-except ImportError:                    # fallback when run next to the files
+except ImportError:                    
     from tank_maps import GameMap, build_maps
 
 Point = Tuple[float, float]
@@ -32,7 +22,7 @@ class GameConfig:
     ground_height: int = 50         # minimum terrain height (the base floor)
     spawn_margin: int = 100         # tank distance from the arena edges
     map_mode: str = "shuffle"       # "shuffle": every map once per cycle | "random"
-    # physics (same feel as the prototype: 0.1 time units per frame)
+    # physics
     gravity: float = 9.8
     time_step: float = 0.1          # simulated time per rendered frame
     physics_substeps: int = 4       # collision checks per frame (no tunnelling)
@@ -262,6 +252,7 @@ class AITank(Tank):
         best_d = miss(best_angle, best_power, False)
         for k in range(-10, 11):
             p = best_power + k * 0.5
+
             if 5 <= p <= max_power:
                 d = miss(best_angle, p, False)
                 if d < best_d:
@@ -280,14 +271,7 @@ class AITank(Tank):
 # Game
 # --------------------------------------------------------------------------- #
 class TanksGame:
-    """Owns the whole match: tanks, projectile, turns, rounds, score.
-
-    Typical frame flow used by the window:
-        fire_player()/fire_ai()  -> update_projectile() each frame until it
-        returns an ImpactEvent  -> finish_turn() -> (round result | None)
-        -> start_next_round()   -> ... -> is_match_finished() -> get_match_result()
-    """
-
+   
     def __init__(self, arena_width: int = 1280, arena_height: int = 720,
                  config: Optional[GameConfig] = None, seed: Optional[int] = None):
         self.arena_width = arena_width

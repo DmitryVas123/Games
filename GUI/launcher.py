@@ -32,9 +32,18 @@ class GameLauncher(customtkinter.CTkToplevel):
         self.create_sidebar()
         self.create_main_content_area()
         
-        # Ensure this window stays on top
         self.transient(parent)
         self.grab_set()
+
+        self.protocol(
+            "WM_DELETE_WINDOW",
+            self.close_launcher
+        )
+
+    def close_launcher(self):
+
+        self.destroy()
+        self.master.destroy()
 
     def load_icons(self):
         icons = {}
@@ -117,22 +126,27 @@ class GameLauncher(customtkinter.CTkToplevel):
 
     def handle_tanks_result(self, result):
 
-        print("Tanks match finished:")
-        print(result)
+        if result is None:
+            self.deiconify()
+            self.lift()
+            self.focus_force()
+            return
+        else:
+            print("Tanks match finished:")
+            print(result)
 
-        # Future database code:
-        #
-        self.db.save_match(
-            user_id=self.user_id,
-            game_id=3,
-            result=result["result"],
-            score=result["score"],
-            details=result["details"]
-        )
+            self.db.save_match(
+                user_id=self.user_id,
+                game_id=3,
+                result=result["result"],
+                score=result["score"],
+                details=result["details"]
+            )
 
-        self.deiconify()
-        self.lift()
-        self.focus_force()
+            self.deiconify()
+            self.lift()
+            self.focus_force()
+
 
     def open_leaderboard(self):
         LeaderboardWindow(parent=self, db=self.db)

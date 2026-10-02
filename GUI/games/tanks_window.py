@@ -89,7 +89,10 @@ class TanksWindow:
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    pygame.quit()
+                    if self.on_match_finished:
+                        self.on_match_finished(None)
+                    return None
                 elif self.state == GameState.MATCH_OVER:
                     if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
                         running = False
