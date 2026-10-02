@@ -224,6 +224,21 @@ class DatabaseManager:
         except:
             print("Game already in favorites.")
 
+    def remove_favorite(self, user_id, game_id):
+
+        query = """
+        DELETE FROM favorites
+        WHERE user_id = %s
+        AND game_id = %s
+        """
+
+        self.cursor.execute(
+            query,
+            (user_id, game_id)
+        )
+
+        self.db.commit()
+
     def get_favorites(self, user_id):
 
         query = """

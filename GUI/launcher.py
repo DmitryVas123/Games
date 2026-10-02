@@ -123,9 +123,78 @@ class FavoritesWindow(customtkinter.CTkToplevel):
         add_frame = customtkinter.CTkFrame(self.frame, fg_color="transparent")
         add_frame.grid(row=len(favorites)+2, column=0, columnspan=2, pady=20, sticky="ew")
         add_frame.grid_columnconfigure((0,1), weight=1)
+
+        favorite_ids = {
+            game_id
+            for game_id, _, _ in favorites
+        }
         
-        customtkinter.CTkButton(add_frame, text="Add Number Guess", command=lambda: self.add_fav(1)).grid(row=0, column=0, padx=5)
-        customtkinter.CTkButton(add_frame, text="Add Rock Paper Scissors", command=lambda: self.add_fav(2)).grid(row=0, column=1, padx=5)
+        games = [
+            game
+            for game in self.db.get_games()
+            if game[0] not in favorite_ids
+        ]
+
+        for i, (game_id, game_name) in enumerate(games):
+            customtkinter.CTkButton(
+            add_frame,
+            text=f"Add {game_name}",
+            command=lambda gid=game_id: self.add_fav(gid)
+            ).grid(
+            row=i // 2,
+            column=i % 2,
+            padx=5,
+            pady=5,
+            sticky="ew"
+            )
+
+        for i, (game_id, game_name, is_quickstart) in enumerate(favorites):
+
+            marker = " [QUICKSTART]" if is_quickstart else ""
+
+            fav_label = customtkinter.CTkLabel(
+                self.frame,
+                text=f"• {game_name}{marker}",
+                font=customtkinter.CTkFont(size=15)
+            )
+
+            fav_label.grid(
+                row=i + 1,
+                column=0,
+                sticky="w",
+                padx=10
+            )
+
+            radio_btn = customtkinter.CTkRadioButton(
+                self.frame,
+                text="",
+                variable=self.quickstart_var,
+                value=str(game_id)
+            )
+
+            radio_btn.grid(
+                row=i + 1,
+                column=1,
+                sticky="e"
+            )
+
+            if is_quickstart:
+                radio_btn.select()
+
+            remove_btn = customtkinter.CTkButton(
+                self.frame,
+                text="Remove",
+                width=80,
+                fg_color="#DC2626",
+                hover_color="#991B1B",
+                command=lambda gid=game_id: self.remove_fav(gid)
+            )
+
+            remove_btn.grid(
+                row=i + 1,
+                column=2,
+                padx=5
+            )
         
         customtkinter.CTkButton(self.frame, text="Set Quickstart", command=self.set_quickstart).grid(row=len(favorites)+3, column=0, columnspan=2, pady=10, sticky="ew")
 
@@ -138,6 +207,15 @@ class FavoritesWindow(customtkinter.CTkToplevel):
         if game_id_str:
             self.db.set_quickstart(self.user_id, int(game_id_str))
             self.refresh_favorites_list()
+
+    def remove_fav(self, game_id):
+
+        self.db.remove_favorite(
+            self.user_id,
+            game_id
+        )
+
+        self.refresh_favorites_list()
 
 
 class GameLauncher(customtkinter.CTkToplevel): 
@@ -253,13 +331,13 @@ class GameLauncher(customtkinter.CTkToplevel):
 
         # Future database code:
         #
-        # self.db.save_match(
-        #     user_id=self.user_id,
-        #     game_id=3,
-        #     result=result["result"],
-        #     score=result["score"],
-        #     details=result["details"]
-        # )
+        self.db.save_match(
+            user_id=self.user_id,
+            game_id=3,
+            result=result["result"],
+            score=result["score"],
+            details=result["details"]
+        )
 
         self.deiconify()
         self.lift()
